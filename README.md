@@ -5,6 +5,14 @@ Execute the minikube install script (do note that tested with MacbookPro 2018 2.
 	
 	./minikube-install.sh
 
+## Generate SSL certificates
+
+Under key-stores folder 
+
+	./gen-ssl-certs.sh ca ca-cert kafka.example.com
+	./gen-ssl-certs.sh -k server ca-cert kafka. kafka.example.com
+	./gen-ssl-certs.sh -k client ca-cert kafka. kafka.example.com
+
 ## Install Kafka Cluster
 
 In the development folder we already helped to configure 1 zookeeper and 2 broker pods, you can adjust them to fit your actual requirements.
@@ -16,27 +24,42 @@ Especially in the broker service configuration, we use LoadBalancer to pointing 
 
 *kafkacat* has been installed when you execute the minikube script, we can use this cli to test if things are setup properly
 
-	kafkacat -L -b {minikube-expose-ip}:9092
+	kafkacat -L -b kafka.example.com:9000
 
-### Generate Topic
+If using SSL
 
-	kubectl exec -it --namespace=kafka kafka-1 /bin/bash
-	cd /opt/kafka/bin
-	./kafka-topics.sh --create --zookeeper {zookeeper-cluster-ip}:2181 --partitions 1 --replication-factor 1 --topic {topic}
+	kafkacat -L -b kafka.example.com:9000 -X security.protocol=SSL -X ssl.certificate.location=client_cert.pem -X ssl.key.location=client_key.pem -X ssl.key.password=test1234 -X ssl.ca.location=ca_cert.pem
+
+### Create Topic in Cluster
+
+	kubectl -n kafka exec kafka-test-client -- \
+	/usr/bin/kafka-topics --zookeeper kafka-zookeeper:2181 --create --topic sample-test --partitions 1 --replication-factor 1
+
+### List Topics in Cluster
+
+	kubectl -n kafka exec kafka-test-client -- \
+	/usr/bin/kafka-topics --zookeeper kafka-zookeeper:2181 --list
 
 ### Monitoring as Consumer
 
-	kafkacat -b {minikube-expose-ip}:9092 -t {topic}
+In Cluster
+
+	kubectl -n kafka exec kafka-test-client -- \
+	/usr/bin/kafka-console-consumer --bootstrap-server kafka:9093 --topic sample-test --from-beginning
+
+Kafkacat
+
+	kafkacat -b kafka.example.com:9000 -t {topic}
 
 ### Send as Producer
 
-	cat {text-file} | kafkacat -b {minikube-expose-ip}:9092 -t {topic}
+	cat {text-file} | kafkacat -b kafka.example.com:9000 -t {topic}
 
 ### DNS Configure
 
-Please modify your */etc/hosts* and add minikube exposed IP address with the name *kafka-0.kafka.kafka.svc.cluster.local*
+Make sure to modify your */etc/hosts* and add minikube exposed IP address with the hostname.
 	
-	192.168.99.107 kafka-0.kafka.kafka.svc.cluster.local
+	192.168.99.107 kafka.example.com
 
 ## Uninstall 
 

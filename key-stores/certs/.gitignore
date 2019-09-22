@@ -1,0 +1,6 @@
+ca-*
+cert-*
+*.jks
+ssl
+*.p12
+*.cert*
