@@ -1,0 +1,57 @@
+---
+{{- if .Values.zookeeper.enabled }}
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: {{ include "kafka.zookeeper.name" . }}
+  namespace: {{ include "kafka.name" .  }}
+  labels: 
+  {{- include "kafka.zookeeper.labels" . | nindent 4 }}
+spec:
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+    {{- include "kafka.zookeeper.matchLabels" . | nindent 6 }}
+  serviceName: {{ include "kafka.zookeeper.name" . }}-headless
+  template:
+    metadata:
+    labels: 
+    {{- include "kafka.zookeeper.labels" . | nindent 6 }}
+    spec:
+      containers:
+      - command:
+{{ toYaml .Values.zookeeper.command | indent 8 }}
+        env:
+{{ toYaml .Values.zookeeper.env | indent 8 }}
+        image: {{ .Value.images.zookeeper }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        livenessProbe:
+{{ toYaml .Values.zookeeper.livenessProbe | indent 10}}
+        readinessProbe:
+{{ toYaml .Values.zookeeper.readinessProbe | indent 10 }}
+        name: {{ include "kafka.zookeeper.name" . }}
+        ports:
+{{ toYaml .Values.zookeeper.ports.client | indent 8 }}
+{{ toYaml .Values.zookeeper.ports.election | indent 8 }}
+{{ toYaml .Values.zookeeper.ports.server | indent 8 }}
+        resources:
+{{ toYaml .Values.zookeeper.resources | indent 10 }}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/lib/zookeeper
+          name: data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+{{ toYaml .Values.zookeeper.securityContext | indent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      volumes:
+      - emptyDir: {}
+        name: data
+  updateStrategy:
+    type: {{ .Values.updateStrategy }}
+{{- end}}

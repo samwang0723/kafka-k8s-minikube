@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "kafka.name" . }}
+  namespace: {{ include "kafka.name" . }}
+  labels:
+  {{- include "kafka.broker.labels" . | nindent 4 }}
+spec:
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+    {{- include "kafka.broker.matchLabels" . | nindent 6 }}
+  serviceName: {{ include "kafka.name" . }}-headless
+  template:
+    metadata:
+      labels:
+      {{- include "kafka.broker.labels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: {{ include "kafka.name" . }}-broker
+        image: {{ .Value.images.broker }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        ports:
+{{ toYaml .Values.ports.container | indent 8 }}
+        env:
+{{ toYaml .Values.env | indent 8 }}
+        volumeMounts:
+        - mountPath: /opt/kafka/data
+          name: datadir
+        - name: {{ .Values.secrets.name }}
+          mountPath: {{ .Values.secrets.mountPath }}
+          readOnly: {{ .Values.secrets.readOnly }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: datadir
+        emptyDir: {}
+      - name: {{ .Values.secrets.name }}
+        secret:
+          secretName: {{ .Values.secrets.name }}
+          defaultMode: {{ .Values.secrets.mode }}
+  updateStrategy:
+    type: {{ .Values.updateStrategy }}

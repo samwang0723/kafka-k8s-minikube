@@ -1,0 +1,15 @@
+---
+{{- if .Values.podDisruptionBudget }}
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+  {{- include "kafka.zookeeper.labels" . | nindent 4 }}
+  name: {{ include "kafka.zookeeper.name" .  }}-budget
+  namespace: {{ include "kafka.name" .  }}
+spec:
+  selector:
+    matchLabels:
+    {{- include "kafka.zookeeper.matchLabels" . | nindent 6 }}
+{{ toYaml .Values.podDisruptionBudget | indent 2  }}
+{{- end }}

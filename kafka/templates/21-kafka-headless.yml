@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kafka.name" . }}-headless
+  namespace: {{ include "kafka.name" .}}
+  labels:
+  {{- include "kafka.broker.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+{{ toYaml .Values.ports.internal | indent 2 }}
+  selector:
+  {{- include "kafka.broker.matchLabels" . | nindent 4 }}
+  sessionAffinity: None
+  type: ClusterIP
