@@ -1,0 +1,35 @@
+This chart installs a {{ default 3 .Values.replicas }} nodes Zookeeper ensemble for Kafka Cluster.
+
+Connection string for Kafka:
+  {{ template "zookeeper.fullname" . }}-0.{{ template "zookeeper.fullname" . }}-headless:{{ .Values.ports.client }},{{ template "zookeeper.fullname" . }}-1.{{ template "zookeeper.fullname" . }}-headless:{{ .Values.ports.client }},...
+
+To connect from a client pod:
+
+1. Deploy a zookeeper client pod with configuration:
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: zookeeper-client
+      namespace: {{ .Release.Namespace }}
+    spec:
+      containers:
+      - name: zookeeper-client
+        image: {{ .Values.images.name }}:{{ .Values.images.tag }}
+        command:
+          - sh
+          - -c
+          - "exec tail -f /dev/null"
+
+2. Log into the Pod
+
+  kubectl exec -it zookeeper-client -- /bin/bash
+
+3. Use zookeeper-shell to connect in the zookeeper-client Pod:
+
+  zookeeper-shell {{ template "zookeeper.fullname" . }}:{{ .Values.ports.client }}
+
+4. Explore with zookeeper commands:
+
+   https://zookeeper.apache.org/doc/current/zookeeperStarted.html#sc_ConnectingToZooKeeper
+
