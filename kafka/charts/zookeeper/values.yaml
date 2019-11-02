@@ -1,0 +1,95 @@
+#
+# Kafka cluster deployment helm-chart values
+#
+# ------------------------------------------------------------------------------
+# Zookeeper:
+# ------------------------------------------------------------------------------
+## The StatefulSet install 3 pods by default
+replicas: 3
+
+## Maximum history record for deployment
+revisionHistoryLimit: 10
+
+## Kafka image repository
+images:
+  name: confluentinc/cp-zookeeper
+  tag: 5.3.1
+
+## Specify a Zookeeper imagePullPolicy
+## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+imagePullPolicy: IfNotPresent
+
+## StatefulSet update strategy
+updateStrategy: RollingUpdate
+
+## Start and stop pods in parallel or OrderedReady (one-by-one) - Cannot change after release
+podManagementPolicy: OrderedReady
+
+## Limits how many Kafka pods may be unavailable due to voluntary disruptions.
+podDisruptionBudget:
+  maxUnavailable: 1
+
+nodeSelector: {}
+
+## Period to wait for broker graceful shutdown (sigterm) before pod is killed (sigkill)
+## ref: https://kubernetes-v1-4.github.io/docs/user-guide/production-pods/#lifecycle-hooks-and-termination-notice
+## ref: https://kafka.apache.org/10/documentation.html#brokerconfigs controlled.shutdown.*
+terminationGracePeriodSeconds: 60
+
+## Tolerations for nodes that have taints on them.
+## Useful if you want to dedicate nodes to just run kafka
+## https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: []
+
+## Configure Zookeeper resource requests and limits
+## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+resources: {}
+
+## Custom pod annotations
+podAnnotations: {}
+
+## Pod scheduling preferences (by default keep pods within a release on separate nodes).
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+## By default we don't set affinity:
+affinity: {}  # Criteria by which pod label-values influence scheduling for zookeeper pods.
+# podAntiAffinity:
+#   requiredDuringSchedulingIgnoredDuringExecution:
+#     - topologyKey: "kubernetes.io/hostname"
+#       labelSelector:
+#         matchLabels:
+#           release: zookeeper
+
+## If the Zookeeper Chart is disabled a URL and port are required to connect
+ports:
+  client: 2181
+  election: 3888
+  server: 2888
+
+## Zookeeper Configuration
+## ref: https://zookeeper.apache.org/doc/r3.4.10/zookeeperAdmin.html#sc_configuration
+## ref: https://docs.confluent.io/current/zookeeper/deployment.html#important-configuration-options
+tickTime: 2000
+syncLimit: 5
+initLimit: 10
+maxClientCnxns: 60
+autoPurgeSnapRetainCount: 3
+autoPurgePurgeInterval: 24
+
+## Zookeeper JVM Heap Option
+heapOptions: "-Xms512M -Xmx512M"
+
+## Persistent Volumes
+## ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+persistence:
+  enabled: true
+
+  ## The size of the PersistentVolume to allocate to each Zookeeper Pod in the StatefulSet. For
+  ## production servers this number should likely be much larger.
+  ##
+  ## Size for Data dir, where ZooKeeper will store the in-memory database snapshots.
+  dataDirSize: 1Gi
+  # dataDirStorageClass: ""
+
+  ## Size for data log dir, which is a dedicated log device to be used, and helps avoid competition between logging and snaphots.
+  dataLogDirSize: 1Gi
+  # dataLogDirStorageClass: ""

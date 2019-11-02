@@ -59,7 +59,7 @@ Kafkacat
 
 Make sure to modify your */etc/hosts* and add minikube exposed IP address with the hostname.
 	
-	192.168.99.107 kafka.example.com
+	{minikube_ip} kafka.example.com
 
 ## Uninstall 
 
@@ -70,4 +70,29 @@ You can simply remove all setup kubernetes instances by running
 and if you want a fresh environment, please delete minikube and restart one
 
 	minikube delete
+
+## Installing with helm-chart
+
+With better and easier configuration change we can have better control on the release 
+and rollback using helm-chart, and because of the deployment will comes with sequence, 
+we need to execute zookeeper to be ready first, then broker and client.
+
+To have one script execution can simply apply
+
+	./kafka-install-helm.sh
+
+Or you can choose to manual install by using helm console, but make sure to create the 
+namespace and secrets beforehand.
+
+	helm install --name {release_name} --namespace kafka kafka/charts/kafka-broker
+
+View the deployment status by using:
+	
+	helm status {release_name}
+
+Remove the release
+
+	helm delete --purge {release_name}
+
+There are also a confluentinc version, please check https://github.com/confluentinc/cp-helm-charts
 

@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "zookeeper.fullname" . }}-headless
+  namespace: kafka
+  labels:
+    app: {{ template "zookeeper.name" . }}
+    chart: {{ template "zookeeper.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  clusterIP: None
+  ports:
+  - name: election
+    port: {{ .Values.ports.election }}
+    targetPort: {{ .Values.ports.election }}
+    protocol: TCP
+  - name: server
+    port: {{ .Values.ports.server }}
+    targetPort: {{ .Values.ports.server }}
+    protocol: TCP
+  selector:
+    app: {{ template "zookeeper.name" . }}
+    release: {{ .Release.Name }}
+  sessionAffinity: None
+  type: ClusterIP

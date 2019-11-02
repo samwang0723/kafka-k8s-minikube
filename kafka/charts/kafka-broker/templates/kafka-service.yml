@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "kafka.fullname" . }}
+  namespace: kafka
+  labels:
+    app: {{ template "kafka.name" . }}
+    chart: {{ template "kafka.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  ports:
+  - name: broker-internal
+    port: {{ .Values.ports.internal }}
+  - name: broker-external
+    port: {{ .Values.ports.external }}
+  selector:
+    app: {{ template "kafka.name" . }}
+    release: {{ .Release.Name }}
+

@@ -8,7 +8,7 @@ kubectl create secret generic kafka-ssl --namespace=kafka \
 	--from-file=./key-stores/certs
 
 echo "Deploy RBAC for tiller"
-kubectl apply -f kafka/templates/01-rbac-config.yml
+kubectl apply -f 01-rbac-config.yml
 
 echo "Install tiller into k8s cluster"
 helm init --service-account tiller --skip-refresh
